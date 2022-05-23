@@ -37,6 +37,9 @@ dependencies:
   camera: ^0.9.6
   get: ^4.3.8
   gallery_saver: ^2.3.2
+  permission_handler: ^9.2.0
+  webview_flutter: ^3.0.4
+  geolocator: ^8.2.1
 
 dev_dependencies:
   flutter_test:
