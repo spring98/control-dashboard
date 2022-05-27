@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:control_dashboard/core/view_models/02_home/home_view_model.dart';
+import 'package:control_dashboard/utils/constants/kAlert.dart';
 import 'package:control_dashboard/views/02_home/search.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -13,6 +14,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:get/get.dart';
+import '../../utils/util.dart';
+import '../../utils/constants/kAlert.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key, required this.carIndex}) : super(key: key);
@@ -66,17 +69,45 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Control-Dashboard'),
-            GestureDetector(
-              onTap: () async {
-                await homeViewModel.postDriving(widget.carIndex);
-              },
-              child: Container(
-                width: 50,
-                height: 50,
-                color: Colors.orange,
-                child: Icon(Icons.settings),
-              ),
-            ),
+            // GestureDetector(
+            //   onTap: () async {
+            //     data.clear();
+            //     await homeViewModel.postDrivingOn(widget.carIndex, data);
+            //     data.clear();
+            //   },
+            //   child: Container(
+            //     alignment: Alignment.center,
+            //     width: 50,
+            //     height: 50,
+            //     color: Colors.orange,
+            //     // child: Icon(Icons.settings),
+            //     child: Text('on'),
+            //   ),
+            // ),
+            // GestureDetector(
+            //   onTap: () async {
+            //     await homeViewModel.postDrivingOff(widget.carIndex, data);
+            //   },
+            //   child: Container(
+            //     alignment: Alignment.center,
+            //     width: 50,
+            //     height: 50,
+            //     color: Colors.green,
+            //     // child: Icon(Icons.settings),
+            //     child: Text('off'),
+            //   ),
+            // ),
+            // GestureDetector(
+            //   onTap: () {
+            //     Get.to(() => Search(carIndex: widget.carIndex));
+            //   },
+            //   child: Container(
+            //     width: 50,
+            //     height: 50,
+            //     color: Colors.indigo,
+            //     child: Icon(Icons.settings),
+            //   ),
+            // ),
           ],
         ),
         // centerTitle: true,
@@ -106,7 +137,11 @@ class _HomeState extends State<Home> {
           JavascriptChannel(
               name: 'onTapMarker',
               onMessageReceived: (message) {
+                print('⚽️ 지금 웹에서 날아오는 메세지 출력할 예정');
                 print(message.message);
+                print(int.parse(message.message.split(' ')[0]));
+                int imageIndex = int.parse(message.message.split(' ')[0]);
+                alert2(message.message, imageIndex);
               }),
           JavascriptChannel(
               name: 'mouseTouch',
@@ -186,10 +221,32 @@ class _HomeState extends State<Home> {
         Expanded(
           child: GestureDetector(
             onTap: () async {
-              await cameraCapture();
-              // /// 후면 카메라 <-> 전면 카메라 변경
-              // cameraIndex = cameraIndex == 0 ? 1 : 0;
-              // await _initCamera();
+              // try {
+              //   await _cameraController!.takePicture().then((value) {
+              //     captureImage = File(value.path);
+              //     print('❤️ ${value.path}');
+              //     captureUrl = value.path;
+              //   });
+              //   // child: Container(
+              //   //   width: size.width,
+              //   //   decoration: BoxDecoration(
+              //   //       image: DecorationImage(
+              //   //         image: MemoryImage(captureImage!.readAsBytesSync()),
+              //   //       )),
+              //   // ),
+              //   // await homeViewModel.postBlackBox(widget.carIndex, captureUrl);
+              //
+              //   /// 화면 상태 변경 및 이미지 저장
+              //   setState(() {
+              //     isCapture = true;
+              //   });
+              // } catch (e) {
+              //   print("$e");
+              // }
+              //
+              // // /// 후면 카메라 <-> 전면 카메라 변경
+              // // cameraIndex = cameraIndex == 0 ? 1 : 0;
+              // // await _initCamera();
             },
             child: Container(
               alignment: Alignment.center,
@@ -202,10 +259,10 @@ class _HomeState extends State<Home> {
         Expanded(
           child: GestureDetector(
             onTap: () async {
-              _cameraTimer =
-                  Timer.periodic(Duration(seconds: 2), (timer) async {
-                await cameraCapture();
-              });
+              // _cameraTimer =
+              //     Timer.periodic(Duration(seconds: 2), (timer) async {
+              //   await cameraCapture();
+              // });
             },
             child: Container(
               alignment: Alignment.center,
@@ -218,7 +275,15 @@ class _HomeState extends State<Home> {
         Expanded(
           child: GestureDetector(
             onTap: () async {
-              _cameraTimer?.cancel();
+              // while (true) {
+              //   if (pictureFlag == true) {
+              //     _cameraTimer?.cancel();
+              //     break;
+              //   }
+              // }
+              // setState(() {
+              //   pictureFlag = true;
+              // });
             },
             child: Container(
               alignment: Alignment.center,
@@ -235,7 +300,10 @@ class _HomeState extends State<Home> {
   Widget _startButton() {
     return GestureDetector(
       onTap: () async {
+        alert('gps를 측정합니다. 잠시만 기다려 주세요.');
+
         await startButtonClicked();
+        await homeViewModel.postDrivingOn(widget.carIndex, data);
       },
       child: Container(
         alignment: Alignment.center,
@@ -253,7 +321,12 @@ class _HomeState extends State<Home> {
   Widget _stopButton() {
     return GestureDetector(
       onTap: () async {
-        _locationTimer?.cancel();
+        alert('gps를 측정이 완료되었습니다.');
+        // _locationTimer?.cancel();
+        setState(() {
+          pictureFlag = true;
+        });
+        // await homeViewModel.postDrivingOff(widget.carIndex, data);
       },
       child: Container(
         alignment: Alignment.center,
@@ -292,7 +365,7 @@ class _HomeState extends State<Home> {
     try {
       await _cameraController!.takePicture().then((value) {
         captureImage = File(value.path);
-        print('❤️ ${value.path}');
+        // print('❤️ ${value.path}');
         captureUrl = value.path;
       });
 
@@ -320,19 +393,17 @@ class _HomeState extends State<Home> {
     });
   }
 
-  Future<Position> getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-
-    return position;
-  }
-
   Future<void> permission() async {
     await [Permission.camera, Permission.storage, Permission.location]
         .request();
   }
 
+  List<File> imageList = [];
+  List<Map<String, String>> data = [];
+  bool pictureFlag = false;
   Future<void> startButtonClicked() async {
+    pictureFlag = false;
+
     /// 5개 씩 뽑아서 평균내는 테스트 진행 하면 될 듯?
     List<double> longitudeList = [];
     List<double> latitudeList = [];
@@ -342,8 +413,8 @@ class _HomeState extends State<Home> {
     double preLongitude = 0;
     double preLatitude = 0;
 
-    _locationTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
-      Position position = await getCurrentLocation();
+    _locationTimer = Timer.periodic(Duration(seconds: 3), (timer) async {
+      Position position = await Util().getCurrentLocation();
       double longitude = position.longitude;
       double latitude = position.latitude;
       double speed = position.speed;
@@ -352,10 +423,14 @@ class _HomeState extends State<Home> {
       latitudeList.add(latitude);
       speedList.add(speed);
 
-      print(
-          'raw -> count : $count, 경도 : $longitude , 위도 : $latitude, 속도 : $speed');
+      // print(
+      //     'raw -> count : $count, 경도 : $longitude , 위도 : $latitude, 속도 : $speed');
 
       if (count >= 5) {
+        // setState(() {
+        //   pictureFlag = false;
+        // });
+
         double sumLongitude = 0;
         double sumLatitude = 0;
         double sumSpeed = 0;
@@ -392,11 +467,101 @@ class _HomeState extends State<Home> {
             'appToWeb("${sumLongitude / 5}", "${sumLatitude / 5}", "$longitude", "$latitude", "$preLongitude", "$preLatitude")');
         preLongitude = sumLongitude / 5;
         preLatitude = sumLatitude / 5;
+
+        Map<String, String> fragData = {
+          'colec_dt':
+              DateTime.now().add(Duration(seconds: 1)).toString().split('.')[0],
+          'lat': '${(sumLatitude / 5).toStringAsFixed(10)}',
+          'lng': '${(sumLongitude / 5).toStringAsFixed(10)}',
+        };
+        data.add(fragData);
+        // print('🏓');
+        // print(data);
+
         print(
             'filtered -> count : ❤️, 경도 : ${sumLongitude / 5} , 위도 : ${sumLatitude / 5}, 속도 : ${sumSpeed / 5}, 거리 : $distance');
-        // count = 0;
+
+        // 사진 보내기
+        try {
+          await _cameraController!.takePicture().then((value) {
+            captureImage = File(value.path);
+            imageList.add(File(value.path));
+            // print('❤️ ${value.path}');
+            captureUrl = value.path;
+          });
+
+          await homeViewModel.postBlackBox(widget.carIndex, captureUrl,
+              (sumLatitude / 5).toString(), (sumLongitude / 5).toString());
+        } catch (e) {
+          print("$e");
+        }
+
+        await _myController.runJavascript(
+            'appToWebForImageMarker("${sumLongitude / 5}", "${sumLatitude / 5}")');
+        // setState(() {
+        //   pictureFlag = true;
+        // });
+        if (pictureFlag == true) {
+          timer.cancel();
+          await homeViewModel.postDrivingOff(widget.carIndex, data);
+        }
       }
       count++;
     });
+  }
+
+  Future<dynamic> alert2(String contents, int imageIndex) {
+    return Get.dialog(
+        Dialog(
+          child: SizedBox(
+            height: 250,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  alignment: Alignment.center,
+                  height: 39,
+                  child: Text('알림'),
+                ),
+                Container(
+                    alignment: Alignment.center,
+                    color: Colors.green,
+                    height: 1),
+                // Container(
+                //   padding: EdgeInsets.only(left: 15, right: 15),
+                //   alignment: Alignment.center,
+                //   height: 70,
+                //   child: Text(contents),
+                // ),
+                Container(
+                  height: 170,
+                  // width: 200,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image:
+                          MemoryImage(imageList[imageIndex].readAsBytesSync()),
+                      fit: BoxFit.fill,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Get.back(result: 'yes');
+                  },
+                  child: Container(
+                    color: Colors.green,
+                    alignment: Alignment.center,
+                    height: 40,
+                    child: Text(
+                      '확인',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: false);
   }
 }
